@@ -1,0 +1,9 @@
+.settings
+.buildpath
+.idea
+.project
+templates_c
+admin_templates_c
+cache
+.svn
+

@@ -1,0 +1,13 @@
+<div class="tools">
+    <div class="tools__search">
+        <form action="{$base_url}/catalog/" method="get">
+            <div class="icon-search tools__search__icon"></div>
+            <input type="text" name="search_product" placeholder="»щу по артикулу и названию" value="{$keyword}"/>
+        </form>
+    </div>
+    <div class="tools__second-menu">
+        {foreach from=$main_menu item=menu}
+            <a href="{$base_url}/{$menu.url}/" {if $current_url == $menu.url}class="tools__second-menu__wishlist"{/if} title="{$menu.name}">{$menu.name}</a>
+        {/foreach}
+    </div>
+</div>
