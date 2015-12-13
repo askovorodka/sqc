@@ -133,7 +133,18 @@ if(document.getElementById(name).style.display!="none") {
 		
 		<div style="width:250px; height:150px; overflow: auto;">
 		{section name=element loop=$entry.3}
-			<input {foreach from=$product_properties item=item}{if $item.property_id==$entry.0 && $item.value==$entry.3[element]}checked{/if}{/foreach} type="checkbox" name="edit_properties[{$entry.0}|{$entry.3[element]}]" id="pt_{$entry.3[element]}" value="{$entry.3[element]}" />&nbsp;<label for="pt_{$entry.3[element]}">{$entry.3[element]}</label><br />
+			<input
+					{foreach from=$product_properties item=item}{if $item.property_id==$entry.0 && $item.value==$entry.3[element]}checked{/if}{/foreach}
+					type="checkbox"
+					name="edit_properties[{$entry.0}|{$entry.3[element]}]"
+					id="pt_{$entry.3[element]}" value="{$entry.3[element]}" />&nbsp;
+			<label for="pt_{$entry.3[element]}">{$entry.3[element]}</label>
+
+			{if $entry.0 == $smarty.const.PROPERTY_COLOR_ID}
+				<div style="width:10px; height:10px; background-color: {$entry.3[element]}; float:left; clear:both;">&nbsp;</div>
+			{/if}
+
+			<br />
 		{/section}
 		</div>
 		
@@ -292,7 +303,7 @@ if(document.getElementById(name).style.display!="none") {
 
 <table width="100%" style="height: 120px;" border="0" cellspacing="0" cellpadding="0" id="nav_photo_{$entry.id}">
   <tr>
-    <td align="center"><img src=../uploaded_files/shop_images/small-{$entry.id}.{$entry.ext} border="0" width="100" height="100" alt=""></td>
+    <td align="center"><img src=../uploaded_files/shop_images/100x100-{$entry.id}.{$entry.ext} border="0" width="100" height="100" alt=""></td>
   </tr>
 </table>
 

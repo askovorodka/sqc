@@ -43,7 +43,7 @@ static function resize($src, $dst, $dst_width, $dst_height, $crop = true, $backg
 						$new_width = floor($src_height * $dst_ratio);
 						$x_offset = floor(($src_width - $new_width) / 2);
 
-						$commands[] = "/usr/local/bin/convert -crop {$new_width}x{$src_height}+$x_offset+0 $src $tmp";
+						$commands[] = "/usr/bin/convert -crop {$new_width}x{$src_height}+$x_offset+0 $src $tmp";
 					}
 					elseif ($src_ratio < $dst_ratio)
 					{
@@ -52,7 +52,7 @@ static function resize($src, $dst, $dst_width, $dst_height, $crop = true, $backg
 						$new_height = floor($src_width / $dst_ratio);
 						$y_offset = floor(($src_height - $new_height) / 2);
 
-						$commands[] = "/usr/local/bin/convert -crop {$src_width}x{$new_height}+0+$y_offset $src $tmp";
+						$commands[] = "/usr/bin/convert -crop {$src_width}x{$new_height}+0+$y_offset $src $tmp";
 					}
 					else
 					{
@@ -63,7 +63,7 @@ static function resize($src, $dst, $dst_width, $dst_height, $crop = true, $backg
 
 					// Изменяем размер
 
-					$commands[] = "/usr/local/bin/convert -strip -resize {$dst_width}x{$dst_height} -filter sinc -unsharp 0.5x0.3+1+0.0 $tmp $dst";
+					$commands[] = "/usr/bin/convert -strip -resize {$dst_width}x{$dst_height} -filter sinc -unsharp 0.5x0.3+1+0.0 $tmp $dst";
 				}
 				else
 				{
@@ -76,7 +76,7 @@ static function resize($src, $dst, $dst_width, $dst_height, $crop = true, $backg
 						$x_border = ceil(($dst_width - $src_width) / 2);
 						$y_border = ceil(($dst_height - $src_height) / 2);
 
-						$commands[] = "/usr/local/bin/convert -strip -bordercolor \"$background\" -border {$x_border}x{$y_border} -crop {$dst_width}x{$dst_height}+0+0 $src $dst";
+						$commands[] = "/usr/bin/convert -strip -bordercolor \"$background\" -border {$x_border}x{$y_border} -crop {$dst_width}x{$dst_height}+0+0 $src $dst";
 					}
 					elseif ($src_ratio > $dst_ratio)
 					{
@@ -84,8 +84,8 @@ static function resize($src, $dst, $dst_width, $dst_height, $crop = true, $backg
 
 						$y_border = ceil(($dst_height - $dst_width / $src_ratio) / 2);
 
-						$commands[] = "/usr/local/bin/convert -strip -resize {$dst_width}x{$dst_height} -filter sinc -unsharp 0.5x0.3+1+0.0 $src $tmp";
-						$commands[] = "/usr/local/bin/convert  -bordercolor \"$background\" -border 0x{$y_border} -crop {$dst_width}x{$dst_height}+0+0 $tmp $dst";
+						$commands[] = "/usr/bin/convert -strip -resize {$dst_width}x{$dst_height} -filter sinc -unsharp 0.5x0.3+1+0.0 $src $tmp";
+						$commands[] = "/usr/bin/convert  -bordercolor \"$background\" -border 0x{$y_border} -crop {$dst_width}x{$dst_height}+0+0 $tmp $dst";
 					}
 					elseif ($src_ratio < $dst_ratio)
 					{
@@ -93,14 +93,14 @@ static function resize($src, $dst, $dst_width, $dst_height, $crop = true, $backg
 
 						$x_border = ceil(($dst_width - $dst_height * $src_ratio) / 2);
 
-						$commands[] = "/usr/local/bin/convert -strip -resize {$dst_width}x{$dst_height} -filter sinc -unsharp 0.5x0.3+1+0.0 $src $tmp";
-						$commands[] = "/usr/local/bin/convert -bordercolor \"$background\" -border {$x_border}x0 -crop {$dst_width}x{$dst_height}+0+0 $tmp $dst";
+						$commands[] = "/usr/bin/convert -strip -resize {$dst_width}x{$dst_height} -filter sinc -unsharp 0.5x0.3+1+0.0 $src $tmp";
+						$commands[] = "/usr/bin/convert -bordercolor \"$background\" -border {$x_border}x0 -crop {$dst_width}x{$dst_height}+0+0 $tmp $dst";
 					}
 					else
 					{
 						// Исходник имеет теже соотношения сторон, что результат и больше оного
 
-						$commands[] = "/usr/local/bin/convert -strip -resize {$dst_width}x{$dst_height} -filter sinc -unsharp 0.5x0.3+1+0.0 $src $dst";
+						$commands[] = "/usr/bin/convert -strip -resize {$dst_width}x{$dst_height} -filter sinc -unsharp 0.5x0.3+1+0.0 $src $dst";
 					}
 				}
 
@@ -129,7 +129,7 @@ static function resize($src, $dst, $dst_width, $dst_height, $crop = true, $backg
 					$dst_height = floor($dst_width / $src_ratio);
 				}
 				//хренарим
-				$commands[] = "/usr/local/bin/convert -strip -resize {$dst_width}x{$dst_height} -filter sinc -unsharp 0.5x0.3+1+0.0 $src $dst";
+				$commands[] = "/usr/bin/convert -strip -resize {$dst_width}x{$dst_height} -filter sinc -unsharp 0.5x0.3+1+0.0 $src $dst";
 			}
 
 		}

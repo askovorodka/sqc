@@ -572,9 +572,10 @@ if (isset($_POST['submit_edit_product'])) {
 	//$db->query("DELETE FROM fw_products_properties WHERE product_id='$id' LIMIT ".count($_POST['edit_properties']));
 	$db->query("DELETE FROM fw_products_properties WHERE product_id='$id'");
 	
-	//print_r($_POST['edit_properties']);
+	print_r($_POST['edit_properties']);
 	foreach($_POST['edit_properties'] as $key => $val)
 	{
+
 		$key_array = explode("|",$key);
 		$property_id = $key_array[0];
 		$value = $key_array[1];
@@ -584,7 +585,6 @@ if (isset($_POST['submit_edit_product'])) {
 		//if ($v!="") $db->query("INSERT INTO fw_products_properties SET product_id='$id', property_id='$k', value='$v'");
 	}
 
-	//exit();
 	
 	$db->query("UPDATE 
 		fw_products SET 
@@ -637,6 +637,7 @@ if (isset($_POST['submit_add_photo'])) {
 		$id=mysql_insert_id();
 		if (move_uploaded_file($tmp, BASE_PATH."/uploaded_files/shop_images/$id.$ext")) {
 			chmod(BASE_PATH."/uploaded_files/shop_images/$id.$ext",0777);
+			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/100x100-$id.$ext", 100,100, false, "#FFFFFF");
 			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/small-$id.$ext", PRODUCT_PREVIEW_WIDTH,PRODUCT_PREVIEW_HEIGHT, false, "#FFFFFF");
 			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/medium-$id.$ext", PRODUCT_MEDIUM_WIDTH,PRODUCT_MEDIUM_HEIGHT, false, "#FFFFFF");
 			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/big-$id.$ext", PRODUCT_BIG_WIDTH,PRODUCT_BIG_HEIGHT, false, "#FFFFFF");
