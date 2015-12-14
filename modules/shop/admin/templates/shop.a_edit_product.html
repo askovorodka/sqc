@@ -100,16 +100,16 @@ if(document.getElementById(name).style.display!="none") {
 </tr>
 
 <tr>
-  <td class=td1_left style="border-bottom: none;">Состав:</td>
+  <td class=td1_left style="border-bottom: none;">Тип:</td>
   <td class=td1_right style="border-bottom: none;">
-  <input type=text name=edit_sostav class=field style="width:200px;" value="{$product.sostav}">
+  <input type=text name=edit_type_name class=field style="width:200px;" value="{$product.type_name}">
   </td>
 </tr>
 
 <tr>
-  <td class=td1_left style="border-bottom: none;">Последние поступления на главной:</td>
+  <td class=td1_left style="border-bottom: none;">Скидка:</td>
   <td class=td1_right style="border-bottom: none;">
-  <input type="checkbox" name="edit_hit" value="1" {if $product.hit == '1'}checked{/if} />
+  <input type="checkbox" name="edit_sale" value="1" {if $product.sale == '1'}checked{/if} />
   </td>
 </tr>
 

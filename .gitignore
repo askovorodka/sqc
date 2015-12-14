@@ -6,4 +6,6 @@ templates_c
 admin_templates_c
 cache
 .svn
+uploaded_files
+insertfiles
 

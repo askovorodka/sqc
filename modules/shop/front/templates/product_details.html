@@ -1,10 +1,110 @@
-{include file="`$smarty.const.TPL_PATH`top_search.html"}
-
-{include file="`$smarty.const.TPL_PATH`breadcrumbs.html"}
-
 {if $product}
-<h1>{$product.name}</h1>
+<form action="{$base_url}/catalog/basket/add/" method="post" id="basket_add">
+	<input name="product_count" value="1" type="hidden" />
+	<input name="product_id" value="{$product.id}" type="hidden" />
+	<input type="hidden" name="property_size" value="" />
+	<input type="hidden" name="property_color" value="" />
 
+	<div class="item">
+	{if $images}
+	<div class="item__photos">
+		<div class="item__photos_main" id="item__photos_main">
+			<img id="item__photos_main_picture" src="/uploaded_files/shop_images/medium-{$photo.id}.{$photo.ext}"/>
+		</div>
+		<div class="item__photos__another">
+			{foreach from=$images item=image}
+			<div class="item__photos__another_photo"><img src="/uploaded_files/shop_images/85x85-{$image.id}.{$image.ext}" data-image="/uploaded_files/shop_images/medium-{$image.id}.{$image.ext}" class="js-item__photos__another_photo"/></div>
+			{/foreach}
+		</div>
+	</div>
+	{/if}
+	<div class="item__info">
+		<div class="item__info__about">
+			<h2>{$product.name}</h2>
+			Бренд: {if !empty($product.brand) && !empty($product.brand.value)}{$product.brand.value}{else}&nbsp;{/if}<br>
+			Тип: {$product.type_name}<br>
+			Артикуд: {$product.article}<br>
+
+			<div class="item__info__about_price">
+				{$product.price} руб.
+			</div>
+
+		</div>
+
+		<div class="item__info__selecter">
+			<div>Цвет <span class="longline g-text-light-gray"> — </span></div>
+			<div>
+				{if !empty($product.colors)}
+				{foreach from=$product.colors item=color}
+				<div class="color" data-value="{$color.value}" style="background: {$color.value};"></div>
+				{/foreach}
+				{/if}
+			</div>
+		</div>
+
+		<div class="item__info__selecter">
+			<div>Размер <span class="longline g-text-light-gray"> — </span></div>
+			<div>
+				{if !empty($product.sizes)}
+				{foreach from=$product.sizes item=size}
+				<div class="size" data-value="{$size.value}">{$size.value}</div>
+				{/foreach}
+				{/if}
+			</div>
+		</div>
+
+		<div class="item__info__to-cart">
+			<div class="form_button form_button--yellow inbasket">Добавить в корзину</div>Есть вопросы? Звоните: {$smarty.const.PHONE}
+		</div>
+
+		<div class="text">
+			{$product.description}
+		</div>
+	</div>
+</div>
+</form>
+
+{literal}
+<script type="text/javascript">
+	var Ready = function(){
+		$(".color").click(function(){
+			if ($(this).hasClass("selected")){
+				$(".color").removeClass("selected");
+				return;
+			}
+			else {
+				$(".color").removeClass("selected");
+				$(this).addClass("selected");
+				$("input[name=property_color]",$(this).closest('form')).val($(this).data('value'));
+			}
+		});
+
+		$(".size").click(function(){
+			if ($(this).hasClass("selected")){
+				$(".size").removeClass("selected");
+				return;
+			}
+			else {
+				$(".size").removeClass("selected");
+				$(this).addClass("selected");
+				$("input[name=property_size]",$(this).closest('form')).val($(this).data('value'))
+			}
+		});
+
+		$(".inbasket").click(function(){
+			$(this).closest('form').submit();
+		});
+
+	};
+	document.addEventListener("DOMContentLoaded", Ready, false);
+</script>
+{/literal}
+
+
+
+
+{*
+<h1>{$product.name}</h1>
 <form action="{$base_url}/catalog/basket/add/" method="post">
 	<input name="product_count" value="1" type="hidden" />
 	<input name="product_id" value="{$product.id}" type="hidden" />
@@ -56,8 +156,9 @@
       </tr>
     </table>
 </form>
- 
  <div class="txt">{$product.description}</div>
+*}
+
 {else}
 <center>Такого продукта не существует.</center>
 {/if}

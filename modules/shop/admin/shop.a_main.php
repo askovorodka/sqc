@@ -247,6 +247,7 @@ if (isset($_POST['submit_add_property'])) {
 	$name=String::secure_format($_POST['edit_property_name']);
 	$status=intval($_POST['edit_property_status']);
 	$type=intval($_POST['edit_property_type']);
+	$entity=($_POST['edit_property_entity']);
 
 	$tmp=explode("\n",$_POST['edit_property_elements']);
 	$elements = array();
@@ -257,7 +258,7 @@ if (isset($_POST['submit_add_property'])) {
 
 	$elements = implode("\n", $elements);
 
-	$db->query("INSERT INTO fw_catalogue_properties(name,status,elements,type) VALUES('$name','$status','$elements','$type')");
+	$db->query("INSERT INTO fw_catalogue_properties(name,status,elements,type, entity) VALUES('$name','$status','$elements','$type', '$entity')");
 	header("Location: ?mod=shop&action=properties");
 }
 
@@ -266,6 +267,7 @@ if (isset($_POST['submit_edit_property'])) {
 	$name=String::secure_format($_POST['edit_property_name']);
 	$status=intval($_POST['edit_property_status']);
 	$type=intval($_POST['edit_property_type']);
+	$entity=($_POST['edit_property_entity']);
 	$id=intval($_POST['id']);
 
 	$tmp=explode("\n",$_POST['edit_property_elements']);
@@ -277,7 +279,7 @@ if (isset($_POST['submit_edit_property'])) {
 
 	$elements = implode("\n", $elements);
 
-	$db->query("UPDATE fw_catalogue_properties SET name='$name',type='$type',elements='$elements',status='$status' WHERE id='$id'",1);
+	$db->query("UPDATE fw_catalogue_properties SET name='$name',entity='$entity',type='$type',elements='$elements',status='$status' WHERE id='$id'",1);
 
 	$location=$_SERVER['HTTP_REFERER'];
 	header("Location: $location");
@@ -517,7 +519,7 @@ if (isset($_POST['submit_add_product'])) {
 	//$guarantie=String::secure_format($_POST['edit_guarantie']);
 	$article=String::secure_format($_POST['edit_article']);
 	$country=String::secure_format($_POST['edit_country']);
-	$sostav=String::secure_format($_POST['edit_sostav']);
+	$type_name=String::secure_format($_POST['edit_type_name']);
 	
 	$description=String::secure_format($_POST['edit_description']);
 	
@@ -536,11 +538,11 @@ if (isset($_POST['submit_add_product'])) {
 		
 		article,parent,name,
 		title,price,insert_date,
-		country,sostav,description) 
+		country,type_name,description)
 		
 		VALUES(
 			'$article','$parent','$name','$title','$price',
-			'".time()."','$country','$sostav','$description'
+			'".time()."','$country','$type_name','$description'
 		)");
 	
 	header("Location: ?mod=shop&action=edit_product&id=".mysql_insert_id());
@@ -562,17 +564,16 @@ if (isset($_POST['submit_edit_product'])) {
 	$price=String::secure_format($_POST['edit_price']);
 	
 	$status=$_POST['edit_status'];
-	$hit=isset($_POST['edit_hit'])?"1":"0";
+	$sale=isset($_POST['edit_sale'])?"1":"0";
 	$country=String::secure_format($_POST['edit_country']);
-	$sostav=String::secure_format($_POST['edit_sostav']);
+	$type_name=String::secure_format($_POST['edit_type_name']);
 	
 
 	$id=$_POST['id'];
 
 	//$db->query("DELETE FROM fw_products_properties WHERE product_id='$id' LIMIT ".count($_POST['edit_properties']));
 	$db->query("DELETE FROM fw_products_properties WHERE product_id='$id'");
-	
-	print_r($_POST['edit_properties']);
+
 	foreach($_POST['edit_properties'] as $key => $val)
 	{
 
@@ -595,11 +596,11 @@ if (isset($_POST['submit_edit_product'])) {
 			meta_description='$meta_description',
 			meta_keywords='$meta_keywords',
 			price='$price',
-			sostav='$sostav',
+			type_name='$type_name',
 			country='$country',
 			status='$status',
 			description='$description',
-			hit='$hit' 
+			sale='$sale'
 		WHERE id='$id'");
 	
 
@@ -637,11 +638,12 @@ if (isset($_POST['submit_add_photo'])) {
 		$id=mysql_insert_id();
 		if (move_uploaded_file($tmp, BASE_PATH."/uploaded_files/shop_images/$id.$ext")) {
 			chmod(BASE_PATH."/uploaded_files/shop_images/$id.$ext",0777);
-			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/100x100-$id.$ext", 100,100, false, "#FFFFFF");
-			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/small-$id.$ext", PRODUCT_PREVIEW_WIDTH,PRODUCT_PREVIEW_HEIGHT, false, "#FFFFFF");
-			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/medium-$id.$ext", PRODUCT_MEDIUM_WIDTH,PRODUCT_MEDIUM_HEIGHT, false, "#FFFFFF");
-			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/big-$id.$ext", PRODUCT_BIG_WIDTH,PRODUCT_BIG_HEIGHT, false, "#FFFFFF");
+			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/100x100-$id.$ext", 100,100, true);
+			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/small-$id.$ext", PRODUCT_PREVIEW_WIDTH,PRODUCT_PREVIEW_HEIGHT, true);
+			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/medium-$id.$ext", PRODUCT_MEDIUM_WIDTH,PRODUCT_MEDIUM_HEIGHT, true);
+			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/85x85-$id.$ext", 85,85, true);
 			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/super-$id.$ext", 800,600, false, "#FFFFFF");
+			Image::resize(BASE_PATH."/uploaded_files/shop_images/$id.$ext", BASE_PATH."/uploaded_files/shop_images/50x50-$id.$ext", 50,50, true);
 		}
 		else {
 			$result=$db->query("DELETE FROM fw_products_images WHERE id='".mysql_insert_id()."'");

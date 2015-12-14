@@ -518,13 +518,26 @@ class Shop extends db {
 	}
 	
 	
-	function get_catalog_properties($cat_id)
+	function get_catalog_properties($cat_id, $entity = null)
 	{
-		
-		$result = $this->db->get_all("select * from fw_catalogue_relations left join fw_catalogue_properties on fw_catalogue_relations.property_id=fw_catalogue_properties.id where fw_catalogue_relations.cat_id='{$cat_id}' order by fw_catalogue_properties.id");
+		$where = null;
+		if (!empty($entity)){
+			$where = " and fw_catalogue_properties.entity='{$entity}' ";
+		}
+		$result = $this->db->get_all("select *
+				from fw_catalogue_relations
+				left join fw_catalogue_properties on fw_catalogue_relations.property_id=fw_catalogue_properties.id
+				where fw_catalogue_relations.cat_id='{$cat_id}' {$where}
+				order by fw_catalogue_properties.id");
 		
 		if ($result)
 		{
+			foreach($result as $key=>$value)
+			{
+				if (!empty($value['elements'])) {
+					$result[$key]['elements_array'] = explode("\n", $value['elements']);
+				}
+			}
 			return $result;
 		}
 		else
@@ -533,7 +546,19 @@ class Shop extends db {
 		}
 		
 	}
-	
+
+	public function getProductPropertiesByEntity($product_id, $entity)
+	{
+		$sql = "select fw_products_properties.*
+			FROM fw_products_properties
+			inner join fw_products on fw_products_properties.product_id = fw_products.id
+			inner join fw_catalogue_properties on fw_products_properties.property_id=fw_catalogue_properties.id
+			WHERE fw_products_properties.product_id='{$product_id}' and fw_catalogue_properties.entity='{$entity}' ";
+
+		$result = $this->db->get_all($sql);
+
+		return $result;
+	}
 	
 }
 ?>

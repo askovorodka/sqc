@@ -1,9 +1,133 @@
-{include file="`$smarty.const.TPL_PATH`breadcrumbs.html"}
+{if $basket}
+<form action="" method="post" id="basket_form">
+  <input type="hidden" name="basket_recount" value="1" />
 
-<h1>Моя корзина</h1>
+
+  <div class="cart cart__items">
+    <div class="cart__items_summ">Общая сумма вашего заказа — {$total_price} руб.</div>
+    {foreach from=$basket item=item}
+    <div class="cart__items__item">
+      <div class="cart__items__item_image">
+        <img src="/uploaded_files/shop_images/50x50-{$item.image}">
+        <div class="cart__items__item_image--big">
+          <img src="/uploaded_files/shop_images/85x85-{$item.image}">
+        </div>
+      </div>
+      <div class="cart__items__item_info">
+        {if !empty($item.properties.size)}
+          <div class="cart__items__item_sizes">Размер: <div class="size size--gray">{$item.properties.size}</div></div>
+        {/if}
+        {if !empty($item.properties.color)}
+          <div class="cart__items__item_colors">Цвет: <div class="color" style="background:{$item.properties.color};"></div></div>
+        {/if}
+        <div class="cart__items__item_numbers"><label for="cart_howmuch">Кол-во: <input class="form_input form_input--small" name="edit_number[{$item.id}]" data-value="{$item.number}" type="text" id="cart_howmuch" value="{$item.number}"/></label></div>
+        <div class="cart__items__item_price">— &nbsp; {$item.price_number} руб.</div>
+        <div class="cart__items__item_remove"><a href="{$module_url}/basket/delete/{$item.id}" onClick="return confirm('Удалить продукт из корзины');"><div class="icon icon-trash"></div></a></div>
+      </div>
+      <div class="cart__items__item_title"><a href="{$base_url}/{$item.full_url}/" title="{$item.name}">{$item.name}</a></div>
+    </div>
+    {/foreach}
+  </div>
+</form>
+
+
+<div class="cart__items__after">
+  <div class="cart__summ g-pull-right">
+    <div class="cart__summ_delivery">Доставка: 300 руб.</div>
+    <div class="cart__summ_promo">
+      <label for="cart_promo">ПРОМОКОД <input id="cart_promo" class="form_input" placeholder="HAPPY2016" type="text"/></label>
+    </div>
+    <div class="cart__summ_summary">Итого — 12 678 руб.</div>
+  </div>
+
+  <div class="cart__summ_discount g-pull-right">
+    Ваша постоянная скидка — 5%<br/>
+    А точнее <span class="g-text-orange">3 056 руб.</span>
+  </div>
+</div>
+
+<div class="cart_ready g-text-verybig">Готовы оформить заказ?</div>
+<div class="text">
+  <form class="form">
+    <div class="form_line">
+      <span class="g-text-big">12 378 руб.  — </span> это сумма вашего заказа. Если вы укажете свои данные, нам будет проще доставить его.
+    </div>
+    <div class="form_line">
+      <label for="cart_name"><input id="cart_name" type="text" class="form_input" placeholder="Например, Иван"/> ваше имя сделает наше общение приятнее!</label>
+    </div>
+    <div class="form_line">
+      <label for="cart_phone"><input id="cart_phone" type="text" class="form_input" placeholder="(123) 456-78-90"/> телефон поможет нам позвонить и утвердить заказ ;)</label>
+    </div>
+    <div class="form_line">
+      <label for="cart_address"><input id="cart_address" type="text" class="form_input" placeholder="г. Владивосток, Пиратская гавань, прич. 9"/> если ввести адрес доставки мы будем знать куда едем</label>
+    </div>
+    <div class="form_line">
+      <label for="cart_delivery1" class="g-pointer"><input id="cart_delivery1" name="delivery" type="radio"/> доставка курьером <span class="g-text-light-gray">(по Москве)</span></label><br>
+      <label for="cart_delivery2" class="g-pointer"><input id="cart_delivery2" name="delivery" type="radio"/> доставка Почтой России</label>
+    </div>
+    <div class="form_line form_line--yellow">
+      <div class="cart_motivator">
+        <span class="g-text-bigger">Хотите скидку 5% сразу и навсегда? — заполните это!</span><br>
+        Покупку можно совершить и без регистрации, но тогда постоянной скидки у вас не будет ;(
+      </div>
+      <div class="form_line">
+        <label for="cart_email"><input id="cart_email" type="email" class="form_input form_input--white" placeholder="Email"/> вводите email и ждите письма!</label>
+      </div>
+      <div class="form_line">
+        <label for="cart_password"><input id="cart_password" type="password" class="form_input form_input--white" placeholder="Пароль"/> какой личный кабинет без пароля</label>
+      </div>
+    </div>
+    <div class="form_line">
+      <textarea class="form_input form_textarea" placeholder="Сообщение"></textarea>
+    </div>
+    <div class="form_line">
+      <label><button class="form_button form_button--yellow">Оформить заказ</button> <span class="g-text-big">Есть вопросы? Звоните: 8 (495) 565-75-25</span></label>
+    </div>
+  </form>
+</div>
+
+
+
+{literal}
+<script type="text/javascript">
+  var Ready = function(){
+    $("input[name^=edit_number]").keyup(function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      if (parseInt($(this).val()) != $(this).val()){
+        alert('Введите число');
+        $(this).focus();
+        return false;
+      }
+
+      if (!parseInt($(this).val())) {
+        alert('Кол-во должно быть более 0');
+        return false;
+      }
+
+      if ($(this).val() != $(this).data('value')) {
+        $(this).closest('form').submit();
+      }
+
+    }).focus(function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      $(this).select();
+    });
+
+  };
+  document.addEventListener("DOMContentLoaded", Ready, false);
+</script>
+{/literal}
+
+{else}
+<center>Ваша корзина пуста.</center>
+{/if}
+
+
 
 {if $basket}
-
+{*
 <form action="" method="post" id="basket_form">
 <input type="hidden" name="basket_recount" value="1" />
 <table class="basketin">
@@ -32,7 +156,7 @@
 </form>
 
 <a title="Оформить заказ" href="/catalog/basket/step1/"><img src="{$template_image}but_oform.png" class="basketoform" /></a>
-
+*}
 {else}
 <center>Корзина пуста.</center>
 {/if}

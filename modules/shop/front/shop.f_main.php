@@ -266,9 +266,16 @@ SWITCH (TRUE) {
 
 		$number_found=false;
 		
-		$properties = array();
+		$properties = [];
 		$number = $_POST['product_count'];
-		if ($_POST['property'])
+		if (!empty($_POST['property_size'])){
+			$properties['size'] = $_POST['property_size'];
+		}
+		if (!empty($_POST['property_color'])){
+			$properties['color'] = $_POST['property_color'];
+		}
+
+		/*if ($_POST['property'])
 		{
 			if (count($_POST['property']) > 0)
 				$number = intval(count($_POST['property']));
@@ -284,7 +291,8 @@ SWITCH (TRUE) {
 		
 			if (!empty($_POST['size']))
 				$properties['Размер'] = $_POST['size'];
-		}
+		}*/
+
 		
 		
 		$product_id = $_POST['product_id'];
@@ -953,9 +961,56 @@ SWITCH (TRUE) {
 					$where = "";
 				}
 
-		$order='ORDER BY sort_order ASC';
+		$join = null;
+		if (isset($_GET['sizes']))
+		{
+			$sizes = $_GET['sizes'];
+			$sizes = explode(",", $sizes);
+			$sizes = array_filter($sizes, function($value){
+				return preg_match("/^([0-9]+)$/is", $value);
+			});
+			if (!empty($sizes))
+			{
+				$join = " inner join fw_products_properties pt on p.id=pt.product_id ";
+				$wheres = [];
+				foreach($sizes as $size)
+				{
+					$wheres[] = "  (pt.property_id=" . PROPERTY_SIZE_ID . " and pt.value='{$size}') ";
+				}
+
+				$where .= " and ( " . implode(" or ", $wheres) . " ) ";
+
+			}
+			unset($url[$n]);
+			unset($current_url_pages[count($current_url_pages)-1]);
+		}
+
+		if (isset($_GET['brands']))
+		{
+			$brands = $_GET['brands'];
+			$brands = explode(",", $brands);
+			if (!empty($brands))
+			{
+				$join = " inner join fw_products_properties pt on p.id=pt.product_id ";
+				$wheres = [];
+				foreach($brands as $brand)
+				{
+					$wheres[] = "  (pt.property_id=" . PROPERTY_BRAND_ID . " and pt.value='{$brand}') ";
+				}
+
+				$where .= " and ( " . implode(" or ", $wheres) . " ) ";
+
+			}
+			unset($url[$n]);
+			unset($current_url_pages[count($current_url_pages)-1]);
+		}
+
+
+
+		$order='ORDER BY p.sort_order ASC';
 		if (!isset($page)) $page=1;
 		$dirs=array("price"=>"desc","insert_date"=>"desc","name"=>"desc");
+
 
 		if (isset($_GET['page']) or isset($_GET['order'])) {
 
@@ -967,18 +1022,19 @@ SWITCH (TRUE) {
 				switch ($_GET['sort'])
 				{
 					case 'name':
-						$order = "order by name ";
+						$order = "order by p.name ";
 					break;
 					case 'article':
-						$order = "order by article ";
+						$order = "order by p.article ";
 					break;
 					case 'price':
-						$order = "order by price ";
+						$order = "order by p.price ";
 					break;
 					
 					default:
-						$order = "order by sort_order ";
+						$order = "order by p.sort_order ";
 					break;
+
 				}
 				
 				$smarty->assign('sort', $_GET['sort']);
@@ -1103,35 +1159,47 @@ SWITCH (TRUE) {
         }
 
 
-				$products_list=$db->get_all("
-				SELECT *,
+				if (!empty($cat_content['id']))
+				{
+
+					$allBrands = $shop->get_catalog_properties((int) $cat_content['id'], PROPERTY_ENTITY_BRAND);
+					if (!empty($allBrands[0])) {
+						$smarty->assign('filter_brands', $allBrands[0]);
+					}
+
+					$allColors = $shop->get_catalog_properties((int) $cat_content['id'], PROPERTY_ENTITY_COLOR);
+					if (!empty($allColors[0])) {
+						$smarty->assign('filter_colors', $allColors[0]);
+					}
+
+					$allSizes = $shop->get_catalog_properties((int) $cat_content['id'], PROPERTY_ENTITY_SIZE);
+					if (!empty($allSizes[0])) {
+						$smarty->assign('filter_sizes', $allSizes[0]);
+					}
+
+				}
+
+
+				$sql ="
+				SELECT p.*,
 						(SELECT id FROM fw_products_images i WHERE i.parent=p.id ORDER BY sort_order ASC LIMIT 1) AS image,
 						(SELECT ext FROM fw_products_images WHERE parent=p.id ORDER BY insert_date DESC LIMIT 1) AS ext,
 						(SELECT name FROM fw_products_types WHERE id=p.product_type LIMIT 0,1) AS type_name,
-						(SELECT id FROM fw_products_types WHERE id=p.product_type LIMIT 0,1) AS type_id,
-						(SELECT
-							GROUP_CONCAT(CONCAT_WS('||#||',
-								cp.id,
-								cp.name,
-								cp.type,
-								cp.elements,
-								cp.status,
-								(SELECT value FROM fw_products_properties AS pp WHERE pp.product_id = p.id AND pp.property_id = cr.property_id LIMIT 1)
-							) ORDER BY cr.sort_order SEPARATOR '##|##')
-						FROM fw_catalogue_relations AS cr
-						LEFT JOIN fw_catalogue_properties AS cp ON cp.id=cr.property_id
-						WHERE cr.cat_id = p.parent) as properties
-					FROM fw_products AS p
+						(SELECT id FROM fw_products_types WHERE id=p.product_type LIMIT 0,1) AS type_id
+					FROM fw_products AS p {$join}
 					WHERE
 						p.parent='".$cat_content['id']."'
 						AND
 						p.status='1' $where
-						$order "
-				);
+						order by p.sort_order ";
+
+				$products_list=$db->get_all($sql);
 
 
-				foreach ($products_list as $v => $key) {
-						$tmp=explode("##|##",$key['properties']);
+				foreach ($products_list as $v => $key)
+				{
+
+						/*$tmp=explode("##|##",$key['properties']);
 						$products_list[$v]['properties']=array();
 						foreach ($tmp as $val => $k) {
 							if (substr_count($k,"||#||")>0) {
@@ -1140,9 +1208,11 @@ SWITCH (TRUE) {
 								if (substr_count($products_list[$v]['properties'][$val][3],"\n")>0) $products_list[$v]['properties'][$val][3]=explode("\n",$products_list[$v]['properties'][$val][3]);
 							}
 						}
+					print_r($products_list[$v]['properties']);*/
+
 						$products_list[$v]['full_url'] = $shop->getFullUrlProduct($products_list[$v]['id'], "catalog");
+						$products_list[$v]['sizes'] = $shop->getProductPropertiesByEntity($products_list[$v]['id'], PROPERTY_ENTITY_SIZE);
 				}
-				
 				
 				$smarty->assign("products_list",$products_list);
 				
@@ -1219,7 +1289,20 @@ SWITCH (TRUE) {
 								$meta_description=$page_title;
 
 
-							$product_properties = $shop->get_product_properties($product_content['id']);
+							//$product_properties = $shop->get_product_properties($product_content['id']);
+							$brand = $shop->getProductPropertiesByEntity($product_content['id'], PROPERTY_ENTITY_BRAND);
+							if (!empty($brand[0])){
+								$product_content['brand'] = $brand[0];
+							}
+							$colors = $shop->getProductPropertiesByEntity($product_content['id'], PROPERTY_ENTITY_COLOR);
+							if (!empty($colors)){
+								$product_content['colors'] = $colors;
+							}
+							$sizes = $shop->getProductPropertiesByEntity($product_content['id'], PROPERTY_ENTITY_SIZE);
+							if (!empty($sizes)) {
+								$product_content['sizes'] = $sizes;
+							}
+
 							$smarty->assign("product",$product_content);
 							$smarty->assign("product_properties",$product_properties);
 							$smarty->assign("properties",$shop->get_catalog_properties($product_content['parent']));

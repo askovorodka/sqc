@@ -11,5 +11,10 @@
   define("TPL_PATH", ROOT . "templates/");
   define("TPL_SHOP_PATH", ROOT . "modules/shop/front/templates/");
   define('PROPERTY_COLOR_ID', 9);
+  define('PROPERTY_ENTITY_BRAND', 'brand');
+  define('PROPERTY_ENTITY_COLOR', 'color');
+  define('PROPERTY_ENTITY_SIZE', 'size');
+  define('PROPERTY_SIZE_ID', 8);
+  define('PROPERTY_BRAND_ID', 7);
   
 ?>
