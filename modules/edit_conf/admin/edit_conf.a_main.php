@@ -213,7 +213,7 @@ SWITCH (TRUE) {
 
 		$navigation[]=array("url" => BASE_URL."/admin/?mod=edit_conf","title" => 'Редактировать настройки');
 
-		$conf_list=$db->get_all("SELECT * FROM fw_conf where status = 1 ORDER BY section,name");
+		$conf_list=$db->get_all("SELECT * FROM fw_conf where `section` = 'shop' and `conf_key` in ('MAIL_FROM', 'SEND_ORDER_TO') ORDER BY section,name");
 		$conf_list=String::unformat_array($conf_list);
     	$cur_list=$db->get_all("SELECT * FROM fw_currency WHERE status=1");
       	$cur_list=String::unformat_array($cur_list);

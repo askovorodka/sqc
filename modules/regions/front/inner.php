@@ -15,8 +15,8 @@ switch ($_REQUEST["action"])
     /*if (count($products)>0){
     	$val = "<select onChange=void(sel(this,'http://".$_SERVER['HTTP_HOST']."')); name=product style='width : 222px;'><option selected>выберите товар";
     }
-  	else{  		$val = "<select name=product style='width : 222px;' disabled><option selected>товары не найдены";  	}
-    for($i=0; $i<count($products);$i++){    	$val .= "<option value='". $products[$i]['name'] ."'>". $products[$i]['name'] ."</option>";    }
+  	else{  		$val = "<select name=product style='width : 222px;' disabled><option selected>товары не найдены";  	}
+    for($i=0; $i<count($products);$i++){    	$val .= "<option value='". $products[$i]['name'] ."'>". $products[$i]['name'] ."</option>";    }
     $val .= "</select>";*/
     $firms=String::unformat_array($firms);
     $val = count($firms);

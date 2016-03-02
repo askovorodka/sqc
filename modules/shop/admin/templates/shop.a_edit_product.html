@@ -85,7 +85,14 @@ if(document.getElementById(name).style.display!="none") {
   </td>
 </tr>
 
-<tr>
+	<tr>
+		<td class=td1_left style="border-bottom: none;">Цена со скидкой:</td>
+		<td class=td1_right style="border-bottom: none;">
+			<input type=text name=edit_price_sale class=field style="width:200px;" value="{$product.price_sale}">&nbsp;&nbsp;{$currency_admin.znak}
+		</td>
+	</tr>
+
+	<tr>
   <td class=td1_left style="border-bottom: none;">Артикул:</td>
   <td class=td1_right style="border-bottom: none;">
   <input type=text name=edit_article class=field style="width:200px;" value="{$product.article}">
@@ -105,17 +112,18 @@ if(document.getElementById(name).style.display!="none") {
   <input type=text name=edit_type_name class=field style="width:200px;" value="{$product.type_name}">
   </td>
 </tr>
-
+{*
 <tr>
   <td class=td1_left style="border-bottom: none;">Скидка:</td>
   <td class=td1_right style="border-bottom: none;">
   <input type="checkbox" name="edit_sale" value="1" {if $product.sale == '1'}checked{/if} />
   </td>
 </tr>
-
+*}
 
 {if $mode=='edit'}
-{if $product.properties}
+
+	{*if $product.properties}
 <tr><td colspan="2">
 <table width=100% class=content_table>
 	<tr>
@@ -147,26 +155,19 @@ if(document.getElementById(name).style.display!="none") {
 			<br />
 		{/section}
 		</div>
-		
-		
-		{*<select name="edit_properties[]" multiple="yes">
-		{section name=element loop=$entry.3}
-		<option value="{$entry.0}-{$entry.3[element]}" {if $entry.3[element]==$entry.5}selected{/if}>{$entry.3[element]}</option>
-		{/section}
-		</select>*}
-		
-		{elseif $entry.2=='0'}
+			{elseif $entry.2=='0'}
 		<textarea name="edit_properties[{$entry.0}]" class=field style="width:100%; height:35px">{$entry.5}</textarea>
 		{else}&nbsp;{/if}</td></tr>{/if}
 		{/foreach}
 </table>
 </div>
 </td></tr>
-{/if}
-{/if}
+{/if*}
 
 
-<tr>
+{/if}
+
+	<tr>
 <td class=td1_single colspan=2>
 
 <input type=hidden name=edit_description value="">
@@ -262,11 +263,87 @@ if(document.getElementById(name).style.display!="none") {
 
 <br><br>
 <center><input type=submit name={if $mode=='edit'}submit_edit_product value="Сохранить изменения"{else}submit_add_product value="Добавить продукт"{/if} class=button></center>
+	<br><br>
 </form>
 
 
 
 {if $mode=='edit'}
+<table width=100% cellspacing=1 cellpadding=3 class=content_table>
+	<tr>
+		<th>Размеры и цвета продукта</th>
+	</tr>
+
+	<tr><td>
+	<div id="sizes">
+
+		{if !empty($product_properties)}
+		<table width="100%" class=content_table>
+			{foreach from=$product_properties item=property name=forProperty}
+
+			{if $col==1}
+				{assign var="td" value='td1'}
+				{assign var="col" value=0}
+			{else}
+				{assign var="td" value='td2'}
+			{	assign var="col" value=1}
+			{/if}
+
+
+			<tr>
+				<td class={$td}_left width="4%">Размер:</td>
+				<td class={$td}_left width="3%">{$property.value}</td>
+				<td class={$td}_left width="3%">
+					{if !empty($property.size_brand)}
+						{foreach from=$property.size_brand item=sbrand}
+							{$sbrand.value}
+						{/foreach}
+					{else}
+						&mdash;
+					{/if}
+				</td>
+				<td class={$td}_left width="2%"><a href="?mod=shop&action=change_property_status&id={$property.id}" title="Изменить статус свойства"><img src="templates/img/status_{$property.status}.gif" border="0"></a></td>
+				<td class={$td}_left width="3%">Цвета:</td>
+				<td class={$td}_left width="50%">
+					{if !empty($property.colors)}
+						{foreach from=$property.colors item=color}
+							<a href="?mod=shop&action=change_property_status&id={$color.id}" title="color:{$color.value}, статус:{if $color.status == 1}Вкл{else}Выкл{/if}"
+							   style="display: inline-block; width:25px; height: 20px; margin: 0 3px;border:1px solid {if $color.status == 1}LawnGreen{else}red{/if};">
+								<div style="width:25px; height:20px; background-color:{$color.value}; text-align: center; vertical-align: middle; font-weight: bold;">{if $color.status == 1}+{else}-{/if}</div>
+							</a>
+						{/foreach}
+					{/if}
+				</td>
+				<td class={$td}_left width="25%">
+					<form action="" method="post">
+						<input type="hidden" name="product_id" value="{$product.id}" />
+						<input type="hidden" name="parent_id" value="{$property.id}">
+						Цвет [р.{$property.value}]: {*<input type="text" name="property_color" style="width: 55px;" value="" />*}
+						<select name="property_color" style="width:100px;"><option selected>выберите цвет{foreach from=$colors item=color}<option value="{$color.color}" style="background-color: {$color.color};">{if !empty($color.name)}{$color.name}{else}{$color.color}{/if}</option> {/foreach}</select>
+						<button type="submit">Добавить цвет</button>
+					</form>
+				</td>
+			</tr>
+			{/foreach}
+		</table>
+		{/if}
+
+		<br />
+		<form action="" method="post">
+			<input type="hidden" name="product_id" value="{$product.id}" />
+			Размер: <input type="text" name="property_size" value="" style="width: 100px;" placeholder="Размер" />
+			<input type="text" name="property_size_brand" value="" style="width: 150px;" placeholder="Размер производителя" />
+			<button type="submit">Добавить размер</button>
+		</form>
+		<br />
+
+		<table width=100% class=content_table>
+		</table>
+	</div>
+
+	</td></tr>
+</table>
+
 <br><br>
 <table width=100% cellspacing=1 cellpadding=3 class=content_table>
 <tr>

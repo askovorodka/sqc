@@ -1,20 +1,49 @@
-{include file="`$smarty.const.TPL_PATH`top_search.html"}
-
-{include file="`$smarty.const.TPL_PATH`breadcrumbs.html"}
-
-<h1>Результаты поиска</h1>
-
-
-    <div class="pozw">
-    {if $products}
-    	{foreach from=$products item=product}
-		    <div class="pozb"><div class="poz">
-		    <a title="{$product.name}" href="{$base_url}/{$product.full_url}/">{$product.name|strip_tags}</a><br>
-		    {if $product.image}<a title="{$product.name}" href="{$base_url}/{$product.full_url}/"><img src="/uploaded_files/shop_images/medium-{$product.image}" width="149" height="144" class="pozimg"></a>{/if}
-		    <div class="pozpr"><span class="pozboys">{$product.category.name}</span><br /><span class="pozcena">{$product.price}</span> руб.<br><br></div>
-		    </div></div>
-		{/foreach}
+<div class="catalog">
+	{if !empty($products)}
+	{foreach from=$products item=item key=key}
+	<div class="catalog__item" id="catalog__item-{$item.id}">
+		{if $item.image}
+		<a href="{$base_url}/{$item.full_url}/" class="catalog__item_pic{if $item.sale} sale{/if}"><img src="/uploaded_files/shop_images/small-{$item.image}.{$item.ext}" /></a>
+		{/if}
+		<div class="catalog__item__info">
+			<div class="catalog__item__info_plus">
+				<div class="catalog__item__info_plus_sizes">
+					{if !empty($item.sizes)}
+					{foreach from=$item.sizes item=size}
+					<div class="size size--small">{$size.value}</div>
+					{/foreach}
+					{/if}
+				</div>
+				{$item.name|strip_tags}
+			</div>
+			<span class="catalog__item__info_price">{$item.price} руб.</span>
+			<div data-product_id="{$item.id}" class="catalog__item__info_button form_button form_button--middle form_button--yellow-light">на потом</div>
+		</div>
+	</div>
+	{/foreach}
 	{/if}
-    </div>
+</div>
 
-    <div class="txt"><br />{$cat_content.text}</div>
+{literal}
+<script type="text/javascript">
+	var onReady = function(){
+
+		$(document).on('click', '.catalog__item__info_button', function () {
+			var productId = $(this).data('product_id');
+			if (productId)
+			{
+				$.ajax({
+					type:'post',
+					url: location.protocol + '//' + location.hostname + '/catalog/order_later/add/',
+					data: {'product_id' : productId},
+					success: function(response){
+						alert('Товар отложен на потом.');
+					}
+				})
+			}
+		});
+
+	}
+	document.addEventListener('DOMContentLoaded', onReady, false);
+</script>
+{/literal}

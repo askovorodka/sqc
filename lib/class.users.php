@@ -50,7 +50,6 @@ class Users extends db
 		$this->address = $val;
 	}
 	
-	
 	/**
 	 * Регистрация пользователя
 	 */
@@ -65,9 +64,9 @@ class Users extends db
 		
 		$user = $this->get_user($user_id);
 		
-		setcookie('fw_login_cookie',$user['login']."|".sha1($user['password']),time()+LOGIN_LIFETIME,'/','');
+		setcookie('fw_login_shop',$user['login']."|".sha1($user['password']),time()+LOGIN_LIFETIME,'/','');
 		
-		$_SESSION['fw_user'] = $user;
+		$_SESSION['shopuser'] = $user;
 		
 		return $user;
 		
@@ -88,8 +87,13 @@ class Users extends db
 	{
 		return Common::check_auth('user');
 	}
-	
-	
+
+	function is_auth_shopuser()
+	{
+		return Common::check_auth_shop();
+	}
+
+
 	function get_login()
 	{
 		//echo "select * from fw_users where login='{$this->email}' and password='". $this->password ."'";
@@ -115,8 +119,17 @@ class Users extends db
 		else
 			return null;
 	}
-	
-	
+
+	/*public function save_password($userId, $password){
+		parent::query("update fw_users set password='{$password}' where id='{$userId}' ");
+	}
+
+	public function save_data($userId, $name, $phone_1, $address, $delivery, $info)
+	{
+		parent::query("update fw_users set `name`='{$name}', `phone_1`='{$phone_1}', `address`='{$address}', `delivery`='{$delivery}', `info`='{$info}' where id='{$userId}' ");
+	}*/
+
+
 }
 
 ?>

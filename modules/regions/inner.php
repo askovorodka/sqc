@@ -14,8 +14,8 @@ switch ($_REQUEST["action"])
     $result = "SELECT * FROM fw_citys WHERE reg_id=";
     $cond = " city_id IN (SELECT id FROM fw_citys WHERE reg_id=".$_REQUEST['item']." AND name <> 'Москва')";
 
-    if (trim($_REQUEST['item'])=='moskow'){    	$result = "SELECT * FROM fw_metros WHERE city_id=(SELECT id FROM fw_citys WHERE name='".trim($_REQUEST['item'])."')";
-    	$cond = " city_id =(SELECT id FROM fw_citys WHERE name='Москва')";    }
+    if (trim($_REQUEST['item'])=='moskow'){    	$result = "SELECT * FROM fw_metros WHERE city_id=(SELECT id FROM fw_citys WHERE name='".trim($_REQUEST['item'])."')";
+    	$cond = " city_id =(SELECT id FROM fw_citys WHERE name='Москва')";    }
 
     $firms = $db->get_all("SELECT *,(SELECT name FROM fw_citys WHERE id=fw_firms.city_id) as city_name FROM fw_firms WHERE status=1 AND $cond ORDER BY name");
 
@@ -49,13 +49,13 @@ switch ($_REQUEST["action"])
     	$citys = $db->get_all("SELECT * FROM fw_metros WHERE city_id=(SELECT id FROM fw_citys WHERE name='Москва')");
 
     $citys=String::unformat_array($citys);
-    if (count($citys)>0){    	if (trim($_REQUEST['item'])=='moskow')
+    if (count($citys)>0){    	if (trim($_REQUEST['item'])=='moskow')
     		$val2 = "<select style='width : 150px;' name=citys id=citys onChange=void(getMetros2('http://".$_SERVER['HTTP_HOST']."'));><option selected>---выберите метро---";
     	else
 	    	$val2 = "<select style='width : 150px;' name=citys id=citys onChange=void(getMetros('http://".$_SERVER['HTTP_HOST']."'));><option selected>---выберите город---";
-    	for($i=0;$i<count($citys);$i++){    		     $val2 .= "<option value=".$citys[$i]['id'].">".$citys[$i]['name'];    	}
-    	$val2 .= "</select>";    }
-    else    	$val2 = "<select disabled style='width:150px;' name=citys id=citys onChange=void(getMetros('http://".$_SERVER['HTTP_HOST']."'));><option selected>городов нет";
+    	for($i=0;$i<count($citys);$i++){    		     $val2 .= "<option value=".$citys[$i]['id'].">".$citys[$i]['name'];    	}
+    	$val2 .= "</select>";    }
+    else    	$val2 = "<select disabled style='width:150px;' name=citys id=citys onChange=void(getMetros('http://".$_SERVER['HTTP_HOST']."'));><option selected>городов нет";
 
     $JsHttpRequest =& new Subsys_JsHttpRequest_Php("windows-1251");
     $_RESULT = array("status" =>$status, "val"=>$val, "val2"=>$val2);

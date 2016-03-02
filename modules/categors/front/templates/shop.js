@@ -4,7 +4,7 @@ function doLoad(force,p_id) {
 		if (!val){
 			alert('Введите количество продукта');
 			return false;
-		}		else
+		}		else
 			var product_number = '' + document.getElementById('product_number_'+p_id).value;
 
 		var znak = document.getElementById('znak').value;

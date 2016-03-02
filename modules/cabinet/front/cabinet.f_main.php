@@ -4,7 +4,7 @@ require_once BASE_PATH.'/lib/class.image.php';
 
 if ($url[$n]!='login' && $url[$n]!='register' && count($url)!=2 && empty($_POST)) {
 
-	$check_auth=Common::check_auth('user');
+	$check_auth=Common::check_auth_shop('user');
 	if (!$check_auth) {
 		header ("Location: ".BASE_URL."/$module_url/login/");
 		die();
@@ -14,6 +14,7 @@ if ($url[$n]!='login' && $url[$n]!='register' && count($url)!=2 && empty($_POST)
 require_once 'lib/class.mail.php';
 require_once 'lib/class.replace.php';
 require_once 'lib/class.password.php';
+require_once 'lib/class.users.php';
 require_once 'modules/shop/front/class.shop.php';
 $navigation[]=array("url" => $module_url,"title" => $node_content['name']);
 $smarty->assign("module_url",BASE_URL.'/'.$module_url);
@@ -35,10 +36,12 @@ $smarty->assign("currency_site",$cur_site);
 $smarty->assign("currency_site2",$cur_site2);
 
 $shop = new Shop($db);
+$users = new Users();
 /*-----------------РАЗЛИЧНЫЕ ДЕЙСТВИЯ-----------------*/
 
 
-if (isset($_POST['submit_restore'])){
+if (isset($_POST['submit_restore']))
+{
 
 	if (isset($_POST['email']))
 	{
@@ -75,7 +78,9 @@ if (isset($_POST['submit_restore'])){
 
 
 
-if (isset($_POST['submit_login'])) {
+if (isset($_POST['submit_login']) || isset($_POST['submit_form_login']))
+{
+	$return = array("status" => "error", "message" => "Error auth", "data" => "");
 
 	$check = true;
 
@@ -86,13 +91,17 @@ if (isset($_POST['submit_login'])) {
 
 
 	if (trim($password) == "") {
-		$smarty->assign("error_message",'Введите пожалуйста ваш пароль');
-		$smarty->assign("email",$login);
+		//$smarty->assign("error_message",'Введите пожалуйста ваш пароль');
+		//$smarty->assign("email",$login);
 		$check=false;
+		$return['status'] = 'error';
+		$return['message'] = "Error password or email";
 	}
 
 	if (trim($login) == "") {
-		$smarty->assign("error_message",'Введите пожалуйста ваш логин');
+		//$smarty->assign("error_message",'Введите пожалуйста ваш логин');
+		$return['status'] = 'error';
+		$return['message'] = "Error password or email";
 		$check=false;
 	}
 	
@@ -100,58 +109,82 @@ if (isset($_POST['submit_login'])) {
 
 		$content=$db->get_single("SELECT * FROM fw_users WHERE login='$login' AND status='1'");
 		$password_to_check = @$content['password'];
-		if (empty($password_to_check)) {
-			$smarty->assign("error_message",'Такого пользователя не существует');
-			$smarty->assign("email",$login);
+		if (empty($password_to_check))
+		{
+			$return['status'] = 'error';
+			$return['message'] = 'User not found';
+			//$smarty->assign("error_message",'Такого пользователя не существует');
+			//$smarty->assign("email",$login);
 			//echo 'Такого пользователя не существует';
 			//echo "error2";
 			//die();
 		}
 		else {
 
-			if (sha1($password) != $password_to_check) {
-				$smarty->assign("error_message",'Неправильный пароль');
-				$smarty->assign("email",$login);
+			if (sha1($password) != $password_to_check)
+			{
+				$return['status'] = 'error';
+				$return['message'] = 'Error password or email';
+				//$smarty->assign("error_message",'Неправильный пароль');
+				//$smarty->assign("email",$login);
 				//echo 'Неправильный пароль';
 				//echo sha1($password) . " - " . $password_to_check;
 				//echo "error2";
 				//die();
 			}
 			else {
-				setcookie('fw_login_cookie',$login."|".sha1($password),time()+LOGIN_LIFETIME,'/','');
-				$_SESSION['fw_user'] = $content;
+				setcookie('fw_login_shop',$login."|".sha1($password),time()+LOGIN_LIFETIME,'/','');
+				$_SESSION['shopuser'] = $content;
+
+				$return['status'] = 'success';
+				$return['message'] = 'Success auth';
+				$return['data'] = array("name" => iconv('windows-1251', 'utf8', $content['name']), "email" => $content['mail'], "id" => $content['id']);
 				
-				if (!empty($_SESSION['fw_basket']))
+				/*if (!empty($_SESSION['fw_basket']))
 				{
 					header("Location: ".BASE_URL.'/catalog/basket/step1/');
 					die();
-				}
-				
+				}*/
 				//header("Location: ".BASE_URL.'/cabinet/');
 				//echo 1;
 				//die();
-				if ($_SERVER['HTTP_REFERER']==BASE_URL.'/'.$module_url.'/login') header ("Location:". BASE_URL.'/'.$module_url);
+				/*if ($_SERVER['HTTP_REFERER']==BASE_URL.'/'.$module_url.'/login') header ("Location:". BASE_URL.'/'.$module_url);
 				else {
 					$location=$_SERVER['HTTP_REFERER'];
 					header ("Location: $location");
 
-				}
+				}*/
 			}
 
 		}
 	}
 
+	if (isset($_POST['submit_login'])){
+		header("Content-Type:text/json;charset:utf8");
+		echo json_encode($return, true);
+	} else {
+		header("Location:/cabinet/");
+	}
+	die;
+
 	//exit();
 
 }
 
-if ($url[$n]=='logout' && count($url)==2) {
+if ($url[$n]=='logout' && count($url)==2)
+{
+	
+	$return = array("status" => "success", "message" => "Logout success");
 
-	setcookie('fw_login_cookie',"",time()-5555,'/','');
+	setcookie('fw_login_shop',"",time()-5555,'/','');
 	session_destroy();
 	$location=$_SERVER['HTTP_REFERER'];
-	//header ("Location: $location");
-	header ("Location: /");
+
+	//header("Content-Type:text/json;charset:utf8;");
+	//echo json_encode($return, true);
+
+	header ("Location: $location");
+	//header ("Location: /");
 	die();
 
 }
@@ -845,6 +878,36 @@ SWITCH (TRUE){
 
 	BREAK;
 
+	CASE ($url[$n] == "save" && count($url) == 2):
+		if (!empty($_POST))
+		{
+
+			$userId = $check_auth=Common::check_auth_shop('user');
+			$users = $users->get_user($userId);
+
+			if (!empty($_POST['cart_password'])){
+				$password = sha1($_POST['cart_password']);
+				//$users->save_password($userId, $password);
+				$db->query("update fw_users set password='{$password}' where id='{$userId}' ");
+			}
+
+			$name = trim($_POST['cart_name']);
+			$phone_1 = trim($_POST['cart_phone']);
+			$address = trim($_POST['cart_address']);
+			$delivery = $_POST['cart_delivery'];
+			$info = $_POST['cart_info'];
+
+
+			$db->query("update fw_users set `name`='{$name}', `phone_1`='{$phone_1}', `address`='{$address}', `delivery`='{$delivery}', `info`='{$info}' where id='{$userId}' ");
+			//$users->save_data($userId, $name, $phone_1, $address, $delivery, $info);
+
+			$location=$_SERVER['HTTP_REFERER'];
+			header("Location: $location");
+			die;
+
+		}
+		die;
+	BREAK;
 
   CASE ($url[$n]=='orders' && count($url)==2):
 
@@ -931,10 +994,17 @@ SWITCH (TRUE){
 
   DEFAULT:
 
-		if (count($url)==1) $page_found=true;
-		$profile=$db->get_single("SELECT * FROM fw_users u WHERE u.id='".$_SESSION['fw_user']['id']."'");
-		$profile=String::unformat_array($profile,'front');
-		$smarty->assign("temp",$profile);
+	  	$userId = $check_auth=Common::check_auth_shop('user');
+		$user = $users->get_user($userId);
+
+	  	if (count($url)==1) {
+			$page_found=true;
+		}
+
+		$orders = $shop->getUserOrders($userId);
+
+		$smarty->assign("profile", $user);
+	  	$smarty->assign("orders", $orders);
 		$main=$smarty->fetch($templates_path.'/cabinet_main_new.html');
 		$smarty->assign("main",$main);
 		$smarty->assign("content",$node_content['elements']);

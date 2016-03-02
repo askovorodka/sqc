@@ -262,19 +262,21 @@ SWITCH (TRUE) {
 		if (isset($_GET['page'])) $page=$_GET['page'];
 		else $page=1;
 
-		if (isset($_GET['groups'])  &&  intval($_GET['groups'])>0) $cond="  WHERE group_id='".intval($_GET['groups'])."'  ";
+		if (isset($_GET['groups'])  &&  intval($_GET['groups'])>0) $cond="  AND group_id='".intval($_GET['groups'])."'  ";
 		else $cond="";
 		
 		if (isset($_GET['char']) && strlen(trim($_GET['char']))>0){
 			if ($cond=="") 
-				$cond2 = " WHERE UPPER(name) LIKE '".$_GET['char']."%' ";
+				$cond2 = " AND UPPER(name) LIKE '".$_GET['char']."%' ";
 			else
 				$cond2 = " AND UPPER(name) LIKE '".$_GET['char']."%' ";
 		}
 		else
 			$cond2="";
+
+		$cond3 = " where login <> 'root' ";
 	
-		$result=$db->query("SELECT COUNT(*) FROM fw_users $cond $cond2 ");
+		$result=$db->query("SELECT COUNT(*) FROM fw_users $cond3 $cond $cond2 ");
 		$pager=Common::pager($result,USERS_PER_PAGE,$page);
 		
 		$groups=$db->get_all("SELECT * FROM fw_users_groups");
@@ -284,7 +286,7 @@ SWITCH (TRUE) {
 		$smarty->assign("pages",$pager['pages']);
 		$smarty->assign("groups",$groups);
 		
-		$users=$db->get_all("SELECT *, (SELECT name FROM fw_users_groups WHERE id=fw_users.group_id) as priv FROM fw_users $cond $cond2 ORDER BY priv,reg_date DESC LIMIT ".$pager['limit']);
+		$users=$db->get_all("SELECT *, (SELECT name FROM fw_users_groups WHERE id=fw_users.group_id) as priv FROM fw_users $cond3 $cond $cond2 ORDER BY priv,reg_date DESC LIMIT ".$pager['limit']);
 		$users=String::unformat_array($users);
 		
 		$char_list = $db->get_all("SELECT UPPER(MID(name,1,1)) as STR, ASCII(UPPER(MID(name,1,1))) as STR_CODE FROM fw_users GROUP BY STR");

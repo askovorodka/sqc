@@ -31,7 +31,7 @@ var sBodyTag;
 function bodyOnLoad()
     {
     var oEditor=window.opener.oUtil.oEditor;
-    var sHTML="";
+    var sHTML="";
     sHTML = oEditor.document.body.innerHTML;
     sHTML = jsReplace(sHTML," designMode=on","");
     sHTML = sHTML.replace(/>\s+</gi, "><"); //replace space between tag

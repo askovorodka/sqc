@@ -8,12 +8,18 @@
 	<div class="item">
 	{if $images}
 	<div class="item__photos">
-		<div class="item__photos_main" id="item__photos_main">
-			<img id="item__photos_main_picture" src="/uploaded_files/shop_images/medium-{$photo.id}.{$photo.ext}"/>
+		<div class="item__photos_main{if !empty($product.price_sale)} sale{/if}" id="item__photos_main">
+			<img id="item__photos_main_picture"
+				 data-big="{$base_url}/uploaded_files/shop_images/{$photo.id}.{$photo.ext}"
+				 src="{$base_url}/uploaded_files/shop_images/medium-{$photo.id}.{$photo.ext}"/>
 		</div>
 		<div class="item__photos__another">
 			{foreach from=$images item=image}
-			<div class="item__photos__another_photo"><img src="/uploaded_files/shop_images/85x85-{$image.id}.{$image.ext}" data-image="/uploaded_files/shop_images/medium-{$image.id}.{$image.ext}" class="js-item__photos__another_photo"/></div>
+			<div class="item__photos__another_photo"><img
+					src="{$base_url}/uploaded_files/shop_images/85x85-{$image.id}.{$image.ext}"
+					data-image="{$base_url}/uploaded_files/shop_images/medium-{$image.id}.{$image.ext}"
+					data-big="{$base_url}/uploaded_files/shop_images/{$image.id}.{$image.ext}"
+					class="js-item__photos__another_photo"/></div>
 			{/foreach}
 		</div>
 	</div>
@@ -23,50 +29,64 @@
 			<h2>{$product.name}</h2>
 			Бренд: {if !empty($product.brand) && !empty($product.brand.value)}{$product.brand.value}{else}&nbsp;{/if}<br>
 			Тип: {$product.type_name}<br>
-			Артикуд: {$product.article}<br>
+			Артикул: {$product.article}<br>
 
 			<div class="item__info__about_price">
-				{$product.price} руб.
-			</div>
-
-		</div>
-
-		<div class="item__info__selecter">
-			<div>Цвет <span class="longline g-text-light-gray"> — </span></div>
-			<div>
-				{if !empty($product.colors)}
-				{foreach from=$product.colors item=color}
-				<div class="color" data-value="{$color.value}" style="background: {$color.value};"></div>
-				{/foreach}
+				{if !empty($product.price_sale)}
+				    <span class="item__info__about_price--old">{$product.price} руб.</span> <span class="longline g-text-base-size">—</span> {$product.price_sale} руб.
+				{else}
+				    {$product.price} руб.
 				{/if}
 			</div>
+
 		</div>
 
-		<div class="item__info__selecter">
-			<div>Размер <span class="longline g-text-light-gray"> — </span></div>
-			<div>
-				{if !empty($product.sizes)}
-				{foreach from=$product.sizes item=size}
-				<div class="size" data-value="{$size.value}">{$size.value}</div>
-				{/foreach}
-				{/if}
+		{if !empty($properties.sizes) && !empty($properties.colors)}
+			<div class="item__info__selecter">
+				<div>Цвет <span class="longline g-text-light-gray"> — </span></div>
+				<div>
+					{foreach from=$properties.colors item=color key=key}
+					<div class="color" data-color="{$key}" style="background:{$key};"></div>
+					{/foreach}
+				</div>
 			</div>
-		</div>
+
+			<div class="item__info__selecter">
+				<div>Размер <span class="longline g-text-light-gray"> — </span></div>
+				<div>
+				    <select name="sizetype" id="item-sizetype">
+				        <option value="rus">Российский размер (RUS)</option>
+				        <option value="manufacturer">Размер производителя</option>
+				    </select>
+				</div>
+				<div><span class="longline g-text-light-gray"> — </span></div>
+				<div id="current-item-sizes">
+					{foreach from=$properties.sizes item=size key=key}
+					<div class="size js-sizes-rus" data-size="{$key}">{$key}</div>
+					{/foreach}
+				</div>
+			</div>
+		{/if}
 
 		<div class="item__info__to-cart">
 			<div class="form_button form_button--yellow inbasket">Добавить в корзину</div>Есть вопросы? Звоните: {$smarty.const.PHONE}
 		</div>
-
+		{if !empty($product.description)}
 		<div class="text">
 			{$product.description}
 		</div>
+		{/if}
 	</div>
 </div>
 </form>
 
 {literal}
 <script type="text/javascript">
+
+	var properties = {/literal}{if $propertiesJSON}{$propertiesJSON}{else}{literal}{}{/literal}{/if}{literal};
+
 	var Ready = function(){
+
 		$(".color").click(function(){
 			if ($(this).hasClass("selected")){
 				$(".color").removeClass("selected");
@@ -75,7 +95,7 @@
 			else {
 				$(".color").removeClass("selected");
 				$(this).addClass("selected");
-				$("input[name=property_color]",$(this).closest('form')).val($(this).data('value'));
+				$("input[name=property_color]",$(this).closest('form')).val($(this).data('color'));
 			}
 		});
 
@@ -87,7 +107,7 @@
 			else {
 				$(".size").removeClass("selected");
 				$(this).addClass("selected");
-				$("input[name=property_size]",$(this).closest('form')).val($(this).data('value'))
+				$("input[name=property_size]",$(this).closest('form')).val($(this).data('size'))
 			}
 		});
 
@@ -95,69 +115,33 @@
 			$(this).closest('form').submit();
 		});
 
+		var images = $("img").filter(function(){
+			return $(this).data('big') || $(this).data('image');
+		});
+		var img = [];
+
+		if (images)
+		{
+			$(images).each(function(){
+				if ($(this).data('image')){
+					var _img = new Image();
+					_img.src = $(this).data('image');
+					img.push(_img);
+				}
+				if ($(this).data('big')){
+
+					var _img = new Image();
+					_img.src = $(this).data('big');
+					img.push(_img);
+				}
+			});
+		}
+		
 	};
 	document.addEventListener("DOMContentLoaded", Ready, false);
 </script>
 {/literal}
 
-
-
-
-{*
-<h1>{$product.name}</h1>
-<form action="{$base_url}/catalog/basket/add/" method="post">
-	<input name="product_count" value="1" type="hidden" />
-	<input name="product_id" value="{$product.id}" type="hidden" />
-	
-    <table class="catinn">
-      <tr>
-        <td class="catinnimg">
-        	{if $images}
-        	<div style="margin-bottom:5px;"><img title="Увеличить" id="bigimage" image="{$smarty.const.DOMAIN}uploaded_files/shop_images/super-{$photo.id}.{$photo.ext}" src="/uploaded_files/shop_images/big-{$photo.id}.{$photo.ext}" width="156" height="206"></div>
-        		{foreach from=$images item=image}
-            		<a href="/uploaded_files/shop_images/big-{$image.id}.{$image.ext}" super="{$smarty.const.DOMAIN}uploaded_files/shop_images/super-{$image.id}.{$image.ext}" class="smallimage"><img src="/uploaded_files/shop_images/small-{$image.id}.{$image.ext}" width="64" height="74" class="catinnsm" /></a>
-            	{/foreach}
-            {else}
-            <div style="margin-bottom:5px;"><img id="bigimage" src="/templates/img/nophoto.jpg" width="146" height="144"></div>
-        	{/if}
-        </td>
-        
-        <td class="catinnp">
-        <strong>Артикул:</strong> {$product.article}<br>
-        <strong>Состав:</strong> {$product.sostav}<br>
-        <strong>Производитель:</strong> {$product.country}<br>
-        <span class="innprice"><span class="pozcena">{$product.price}</span> руб.</span><br>
-        <table class="tblrc">
-          
-          
-          	{foreach from=$properties item=property name=forp}
-          		<tr>
-          		<td>
-          			{if $property.name != "Размер"}<strong>{$property.name}:</strong><br>{/if}
-          			
-          			{if $property.name == "Размер"}<select name="size"><option selected value="">Выберите размер</option>
-	          			{foreach from=$product_properties item=product_p}
-	          				{if $product_p.property_id==$property.id}<option value="{$product_p.value}" />{$product_p.value}{/if}
-	          			{/foreach}
-          			</select>
-          			{else}
-	          			{foreach from=$product_properties item=product_p}
-	          				{if $product_p.property_id==$property.id}<input name="property[{$product_p.name}|{$product_p.value}]" id="p_{$product_p.property_id}_{$product_p.value}" type="checkbox"><label for="p_{$product_p.property_id}_{$product_p.value}">{$product_p.value}</label><br>{/if}
-	          			{/foreach}
-          			{/if}
-          		</td>
-          		</tr>
-          	{/foreach}
-          
-          
-        </table>
-        <input type="image" src="{$template_image}but_inbasket.png" class="inbasket">
-        </td>
-      </tr>
-    </table>
-</form>
- <div class="txt">{$product.description}</div>
-*}
 
 {else}
 <center>Такого продукта не существует.</center>

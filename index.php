@@ -31,6 +31,7 @@ require_once 'conf/globals.php';
 require_once 'lib/smarty/Smarty.class.php';
 require_once 'lib/class.db.php';
 require_once 'lib/class.common.php';
+require_once 'lib/class.users.php';
 require_once 'lib/class.string.php';
 require_once 'lib/class.array.php';
 require_once 'lib/captchaZDR.php';
@@ -48,6 +49,17 @@ $smarty->cache_dir = 'lib/smarty/cache/';
 
 /* ------------ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ -------------- */
 $db=new db(DB_NAME, DB_HOST, DB_USER, DB_PASS);
+$users = new Users();
+if ($currentUserId = $users->is_auth_shopuser())
+{
+  $currentUser = $users->get_user($currentUserId);
+  $userTemp['name'] = $currentUser['name'];
+  $userTemp['email'] = $currentUser['login'];
+  $userTemp['id'] = $currentUser['id'];
+  $userTemp['phone'] = $currentUser['phone_1'];
+  $smarty->assign('currentUserJson', json_encode($userTemp, true));
+
+}
 
 //вспомогательный класс для каталога товаров
 $shop = new Shop($db);
@@ -150,7 +162,9 @@ $smarty->assign("node_content",$node_content);
 $smarty->assign("template_image",'http://'.$_SERVER['HTTP_HOST'].'/templates/img/');
 
 
-if (!empty($_SESSION['fw_user'])) $smarty->assign('user_info',$_SESSION['fw_user']);
+if (!empty($_SESSION['shopuser'])) {
+  $smarty->assign('user_info', $_SESSION['shopuser']);
+}
 
 
 
@@ -282,6 +296,15 @@ if (!isset($meta_keywords)) {
 $smarty->assign("page_title",@$page_title);
 $smarty->assign("meta_keywords",@$meta_keywords);
 $smarty->assign("meta_description",@$meta_description);
+
+if (!empty($_COOKIE['order_later']))
+{
+  $productsOrderLater = @unserialize($_COOKIE['order_later']);
+  if (!empty($productsOrderLater)){
+    $smarty->assign('order_later_count', count($productsOrderLater));
+    $smarty->assign('order_later_array', $productsOrderLater);
+  }
+}
 
 if (!empty($page_content['id'])){
   $files_list = $db->get_all("SELECT id,ext,title FROM fw_tree_files WHERE parent='".$page_content['id']."'");

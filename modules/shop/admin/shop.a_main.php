@@ -54,21 +54,81 @@ $navigation[]=array("url" => BASE_URL . "/admin/?mod=shop","title" => 'Ìàãàçèí')
 if (isset($_GET['action']) && $_GET['action']!='') $action=$_GET['action'];
 else $action='';
 
-//print_r($_POST);
-//exit();
-
 /*------------------------- ÂÛÏÎËÍßÅÌ ÐÀÇËÈ×ÍÛÅ ÄÅÉÑÒÂÈß ---------------------*/
+
+
+if (!empty($_POST['add_color']))
+{
+	$color = $_POST['color'];
+	$name = $_POST['color_name'];
+	$db->query("insert into colors (`color`,`name`) values ( '{$color}', '{$name}' )");
+
+	$location = $_SERVER['HTTP_REFERER'];
+	header("Location: " . $location);
+	die;
+}
+
+if (!empty($_POST['property_size']) && !empty($_POST['product_id']))
+{
+	$product_id = (int) $_POST['product_id'];
+	if (!$shop->productPropertyExist($product_id, 'size', $_POST['property_size']))
+	{
+		$id = $shop->addProductProperty($product_id, 'size', $_POST['property_size']);
+	}
+
+	if (!empty($_POST['property_size_brand']) && !empty($id)){
+		$shop->addProductProperty($product_id, 'size_brand', $_POST['property_size_brand'], $id);
+	}
+
+	$location = "/admin/index.php?mod=shop&action=edit_product&id={$product_id}&property=show";
+	header("Location: " . $location);
+	die;
+
+}
+
+
+if (!empty($_POST['property_color']) && !empty($_POST['product_id']) && !empty($_POST['parent_id']))
+{
+	$product_id = (int) $_POST['product_id'];
+	$parent_id = (int) $_POST['parent_id'];
+
+	if (!$shop->productPropertyExist($product_id, 'color', $_POST['property_color'], $parent_id))
+	{
+		$shop->addProductProperty($product_id, 'color', $_POST['property_color'], $parent_id);
+	}
+
+	$location = "/admin/index.php?mod=shop&action=edit_product&id={$product_id}&property=show";
+	header("Location: " . $location);
+	die;
+
+}
+
+if (isset($_POST['edit_code']))
+{
+	$code = (string)$_POST['code'];
+	$state = (int)$_POST['state'];
+	$percent = (int) $_POST['percent'];
+	$code=strtoupper($code);
+
+	$query = "INSERT into
+	  	promo_codes (`code`, `state`, `percent`)
+	  	values('{$code}', '{$state}', '{$percent}')
+		on duplicate key
+		update state='{$state}', percent='{$percent}'";
+	$db->query($query);
+
+	$location = "/admin/index.php?mod=shop&action=promo_codes";
+	header("Location: " . $location);
+	die;
+
+}
 
 
 if (isset($_POST['action']) && $_POST['action']=="resort_order") {
 	if (isset($_POST['product']) && isset($_POST['product_prev']) && isset($_POST['parent_cat'])) {
-
-
 		foreach ($_POST['product'] as $key=>$val){
    			$db->query("UPDATE fw_products SET sort_order='$val' WHERE id='$key'");
 		}
-
-
 	}
 
 		if (isset($_POST['del_product']) && is_array($_POST['del_product'])){
@@ -215,10 +275,29 @@ if (isset($_POST['action']) && $_POST['action']=="move_to") {
 	die();
 }
 
+if ($action=="change_property_status" && isset($_GET['id'])) {
+	$id=intval($_GET['id']);
+	$db->query("UPDATE properties SET status=IF(status='0','1','0') WHERE id='".$id."'");
+
+	$location=$_SERVER['HTTP_REFERER'];
+	header ("Location: $location");
+	die();
+}
+
 if ($action=="change_status" && isset($_GET['id'])) {
 	$id=intval($_GET['id']);
 	$db->query("UPDATE fw_catalogue SET status=IF(status='0','1','0') WHERE id='".$id."'");
 
+	$location=$_SERVER['HTTP_REFERER'];
+	header ("Location: $location");
+	die();
+}
+
+if ($action == "delete_color" && !empty($_GET['color']))
+{
+	$color = intval($_GET['color']);
+	$query = "delete from colors where id='{$color}'";
+	$db->query($query);
 	$location=$_SERVER['HTTP_REFERER'];
 	header ("Location: $location");
 	die();
@@ -514,6 +593,7 @@ if (isset($_POST['submit_add_product'])) {
 	//$small_description=String::secure_format($_POST['edit_small_description']);
 	//$description=String::secure_format($_POST['edit_description']);
 	$price=String::secure_format($_POST['edit_price']);
+	$price_sale=!empty($_POST['edit_price_sale']) ? ($_POST['edit_price_sale']) : 0.00;
 	//$price1=String::secure_format($_POST['edit_price1']);
 	//$price2=String::secure_format($_POST['edit_price2']);
 	//$guarantie=String::secure_format($_POST['edit_guarantie']);
@@ -537,11 +617,11 @@ if (isset($_POST['submit_add_product'])) {
 		(
 		
 		article,parent,name,
-		title,price,insert_date,
+		title,price, price_sale,insert_date,
 		country,type_name,description)
 		
 		VALUES(
-			'$article','$parent','$name','$title','$price',
+			'$article','$parent','$name','$title','$price', '{$price_sale}',
 			'".time()."','$country','$type_name','$description'
 		)");
 	
@@ -562,6 +642,7 @@ if (isset($_POST['submit_edit_product'])) {
 	
 	$description=String::secure_format($_POST['edit_description']);
 	$price=String::secure_format($_POST['edit_price']);
+	$price_sale=!empty($_POST['edit_price_sale']) ? ($_POST['edit_price_sale']) : 0.00;
 	
 	$status=$_POST['edit_status'];
 	$sale=isset($_POST['edit_sale'])?"1":"0";
@@ -596,6 +677,7 @@ if (isset($_POST['submit_edit_product'])) {
 			meta_description='$meta_description',
 			meta_keywords='$meta_keywords',
 			price='$price',
+			price_sale='$price_sale',
 			type_name='$type_name',
 			country='$country',
 			status='$status',
@@ -769,6 +851,16 @@ if (isset($_POST['edit_status'])) {
 	header("Location: $location");
 }
 
+if (isset($_GET['action']) && $_GET['action'] == 'code_state') {
+
+	Common::check_priv("$priv");
+	$code=$_GET['code'];
+	$db->query("UPDATE promo_codes SET state=if(state=1,0,1) WHERE code='$code'");
+
+	$location=$_SERVER['HTTP_REFERER'];
+	header("Location: $location");
+}
+
 if ($action=='delete_product') {
 
 	Common::check_priv("$priv");
@@ -888,7 +980,34 @@ if ($action=='delete_previews') {
 /*--------------------------------- ÎÒÎÁÐÀÆÅÍÈÅ ------------------------------*/
 
 SWITCH (TRUE) {
-	
+
+	CASE ($action == 'colors'):
+
+		$colors = $db->get_all("select * from colors order by id desc");
+		$smarty->assign('colors', $colors);
+		$navigation[]=array("url" => BASE_URL."/admin/?mod=shop&action=colors","title" => 'Öâåòà');
+		$template="shop.a_colors.html";
+		BREAK;
+
+	CASE ($action == 'promo_codes'):
+
+		if (!empty($_GET['code'])){
+			$code=$_GET['code'];
+			$edit_code = $db->get_single("
+				select * from promo_codes where code='{$code}'");
+			$smarty->assign('edit_code', $edit_code);
+		}
+
+		$codes = $db->get_all("
+			select *,
+			(select count(*) from promo_codes_users where code=promo_codes.code) count,
+			  (select group_concat(promo_codes_users.order_id) from promo_codes_users where code=promo_codes.code) orders
+		  	from promo_codes order by date desc");
+		$smarty->assign('codes', $codes);
+		$navigation[]=array("url" => BASE_URL."/admin/?mod=shop&action=promo_codes","title" => 'Ïðîìî êîäû');
+		$template="shop.a_promo_codes.html";
+	BREAK;
+
 	//îøèáêà èìïîðòà
 	CASE ($action == 'import_error'):
 		
@@ -1134,9 +1253,10 @@ SWITCH (TRUE) {
 		}
 
 		$product=String::unformat_array($product);
+		$product=String::unformat_array($product);
+
 		
-		
-		$product_properties = $db->get_all("select * from fw_products_properties where product_id='$id'");
+		//$product_properties = $db->get_all("select * from fw_products_properties where product_id='$id'");
 		
 		
 		if ($product['additional_products']!='') {
@@ -1145,7 +1265,11 @@ SWITCH (TRUE) {
 		}
 		$photos_list=$db->get_all("SELECT * FROM fw_products_images WHERE parent='$id' ORDER BY sort_order");
         $types_list=$db->get_all("SELECT * FROM fw_products_types WHERE status='1' ORDER BY name");
+		$product_properties = $shop->getProductProperties($id, 'size');
 		
+		$colors = $db->get_all("select * from colors order by id desc");
+		$smarty->assign('colors', $colors);
+
 		$smarty->assign("currency_admin",$cur_admin);
 		$smarty->assign('types_list',$types_list);
 		$smarty->assign('product_properties',$product_properties);
@@ -1181,7 +1305,7 @@ SWITCH (TRUE) {
 			$sort='ORDER BY '.$_GET['sort'].' ';
 			$smarty->assign("sort",$_GET['sort']);
 		}
-		else $sort='ORDER BY status,insert_date ';
+		else $sort='ORDER BY insert_date ';
 		if (isset($_GET['order']) && $_GET['order']!='') {
 			$sort.=$_GET['order'];
 			$smarty->assign("order",$_GET['order']);
@@ -1221,15 +1345,14 @@ SWITCH (TRUE) {
 
 		$id=$_GET['id'];
 
-		//$order=$db->get_single("SELECT * FROM fw_orders WHERE id='$id'");
-		//$order=String::unformat_array($order);
-
 		$total_summ = $db->get_single("SELECT SUM(price) FROM fw_products WHERE id IN (SELECT product_id FROM fw_orders_products WHERE order_id='$id')");
 
-		$user_info=$db->get_single("SELECT a.*,b.comments,b.status, b.address, b.metro,b.order_price, b.total_price,b.dostavka FROM fw_users as a 
-									INNER JOIN fw_orders as b
-									ON a.id=b.user AND b.id='$id'
-									WHERE a.id=(SELECT user FROM fw_orders WHERE id='$id' LIMIT 0,1)");
+		$user_info=$db->get_single("SELECT fw_orders.*, promo_codes.*
+						FROM fw_orders
+						LEFT JOIN promo_codes_users on fw_orders.id = promo_codes_users.order_id
+						LEFT JOIN promo_codes on promo_codes_users.code = promo_codes.code
+						WHERE fw_orders.id='$id'");
+
 		$smarty->assign("user_info",$user_info);
 
 		$orders=$db->get_all("SELECT a.*,
@@ -1248,8 +1371,6 @@ SWITCH (TRUE) {
 		INNER JOIN
 		(fw_orders_products as b INNER JOIN fw_products as c ON b.product_id=c.id)	ON a.id=b.order_id 
 		WHERE a.id='$id'");
-
-  		//$orders=String::unformat_array($orders);
 
 		$cl=Common::get_nodes_list($cat_list);
 
@@ -1273,10 +1394,12 @@ SWITCH (TRUE) {
 		$order_price = 0;
 		if (count($orders)>0){
 			foreach ($orders as $key=>$val){
-				if (strlen(trim($orders[$key]['price']))>0){
-					$orders[$key]['total_summ']=number_format(($orders[$key]['total_summ'] * $cur_admin['kurs'])/$cur_site['kurs'], 2, '.', '');
-					$order_price += $orders[$key]['total_summ'];
-					$orders[$key]['properties'] = @unserialize($orders[$key]['properties']);
+				if (strlen(trim($orders[$key]['product_price']))>0){
+					/*$orders[$key]['total_summ']=number_format(($orders[$key]['total_summ'] * $cur_admin['kurs'])/$cur_site['kurs'], 2, '.', '');
+					$order_price += $orders[$key]['total_summ'];*/
+					if (!empty($orders[$key]['properties'])){
+						$orders[$key]['properties'] = json_decode($orders[$key]['properties'], true);
+					}
 				}
 			}
 		}

@@ -9,11 +9,143 @@ class Shop extends db {
 		$this->db = &$db;
 	}
 
-	function set_order()
+	public function getUserOrders($userId)
 	{
-		
+		$sql = "select * from fw_orders where user='{$userId}' order by insert_date desc";
+		$orders = $this->db->get_all($sql);
+		if (!empty($orders))
+		{
+			foreach ($orders as $key=>$val)
+			{
+				$orders[$key]['items'] = $this->getItemsByOrderId($val['id']);
+			}
+		}
+		return $orders;
 	}
-	
+
+	public function getItemsByOrderId($orderId)
+	{
+		$sql = "select * from fw_orders_products where order_id='{$orderId}'";
+		$items = $this->db->get_all($sql);
+		if (!empty($items))
+		{
+			foreach($items as $key=>$val)
+			{
+				$items[$key]['product'] = $this->getProductInfo($val['product_id']);
+			}
+		}
+
+		return $items;
+	}
+
+
+	public function productPropertyExist($productId, $propertyKey, $propertyValue, $parentId = 0)
+	{
+		$query = "select id from properties where product_id='{$productId}' and `key`='{$propertyKey}' and `value`='{$propertyValue}' and parent_id='{$parentId}' limit 1";
+		$result =  $this->db->get_single($query);
+		return !empty($result['id']) ? $result : null;
+	}
+
+	public function addProductProperty($productId, $propertyKey, $propertyValue, $parentId = 0)
+	{
+		$query = "insert into properties (product_id, `key`, `value`, parent_id)
+			values ('{$productId}', '{$propertyKey}', '{$propertyValue}', '{$parentId}')";
+		$this->db->query($query);
+		$result = $this->db->get_single("select max(id) as `max` from properties limit 1");
+		return $result['max'];
+	}
+
+	public function getProductProperties($productId, $propertyKey, $parentId = 0, $status = null)
+	{
+		$where = null;
+		if (isset($status))
+		{
+			$status = (int) $status;
+			$where = " and `status` = '{$status}' ";
+		}
+		$query = "select * from properties where product_id='{$productId}' and `key`='{$propertyKey}' and parent_id='{$parentId}' {$where} order by `value` asc";
+		$properties =  $this->db->get_all($query);
+
+		if (!empty($properties))
+		{
+			foreach($properties as $key => $val)
+			{
+				$colors = $this->getProductProperties($productId, 'color', $val['id'], $status);
+				if (!empty($colors)){
+					$properties[$key]['colors'] = $colors;
+				}
+				$size_brand = $this->getProductProperties($productId, 'size_brand', $val['id'], $status);
+				if (!empty($size_brand)){
+					$properties[$key]['size_brand'] = $size_brand;
+				}
+
+			}
+		}
+
+		return !empty($properties) ? $properties : null;
+
+	}
+
+	public function getPropertiesByKey($propertyKey, $status = 1)
+	{
+		$sql = "select `key`, `value`
+				from properties
+				where `key`='{$propertyKey}' and `status`='{$status}'
+				group by `value`";
+		return $this->db->get_all($sql);
+	}
+
+	public function findCode($code, $state = null)
+	{
+
+		$where = array();
+		$where[] = " promo_codes.code='{$code}' ";
+		if ($state){
+			$where[] = " state='{$state}' ";
+		}
+
+		if (!empty($where)){
+			$where = " WHERE " . implode(" and ", $where);
+		}
+
+		$query = " select * from promo_codes {$where} limit 1";
+
+		return $this->db->get_single($query);
+	}
+
+	public function findCodeByUserData($code, $userPhone = null, $userEmail = null)
+	{
+
+		$where = array();
+		if (!empty($userPhone)){
+			$where[] = " promo_codes_users.user_phone='{$userPhone}' ";
+		}
+		if (!empty($userEmail)){
+			$where[] = " promo_codes_users.user_email='{$userEmail}' ";
+		}
+		if (!empty($where)){
+			$where = " WHERE (" . implode(" or ", $where) . ")";
+		}
+
+		$where .= " and promo_codes_users.code='{$code}' ";
+		$sql = "select promo_codes.code
+			from promo_codes
+			inner join promo_codes_users
+			on promo_codes.code = promo_codes_users.code
+			{$where} limit 1";
+
+		return $this->db->get_single($sql);
+
+	}
+
+	public function setUserDataByPromo($code, $userPhone = null, $userEmail = null, $orderId = null)
+	{
+		$sql = "replace into promo_codes_users(`code`,`user_phone`,`user_email`,`order_id`)
+			values('{$code}', '{$userPhone}', '{$userEmail}','{$orderId}');
+		";
+		$this->db->query($sql);
+	}
+
 	function getImageProductByCategory($cat_id)
 	{
 		$products = $this->getProductsByCategory($cat_id);

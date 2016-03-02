@@ -25,7 +25,17 @@ $sub[]= array(
 			"name"=>"Список заказов",
 			"link"=>"?mod=shop&action=orders"
 	   );
-	   
+
+$sub[]= array(
+	"name"=>"Промо коды",
+	"link"=>"?mod=shop&action=promo_codes"
+);
+
+$sub[]= array(
+		"name"=>"Цвета",
+		"link"=>"?mod=shop&action=colors"
+);
+
 	   /*
 $sub[]= array(
 			"name"=>"Статистика",

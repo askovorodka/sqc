@@ -51,7 +51,7 @@ if (isset($_POST['submit_login_form'])) {
 	}
 
 	if ($password < '1') {
-		$smarty->assign("login_message",'¬ведите пожалуйста ваш пароль12');
+		$smarty->assign("login_message",'¬ведите пожалуйста ваш пароль');
 		$smarty->assign("temp_login",$login);
 		$check=false;
 	}

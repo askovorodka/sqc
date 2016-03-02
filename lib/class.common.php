@@ -207,7 +207,64 @@ class Common {
 		}
 	
 	}
-	
+
+
+	static function check_auth_shop() {
+
+		global $db;
+		$where ='user';
+
+		if (!@$_COOKIE['fw_login_shop'] && empty($_SESSION['shopuser'])) {
+			return '0';
+		}
+		else {
+
+			if (!isset($_SESSION['shopuser']['login'])) {
+
+				list($logged_user,$logged_password)=explode("|",$_COOKIE['fw_login_shop']);
+
+				$content=$db->get_single("SELECT * FROM fw_users WHERE login='$logged_user' AND status='1'");
+				$password_to_check=@$content['password'];
+				if (empty($password_to_check)) {
+					return '0';
+				}
+				else {
+
+					if ($logged_password!=$password_to_check) {
+						return '0';
+					}
+					else {
+						$_SESSION['shopuser']=$content;
+						if ($where=='admin' && (!isset($content['priv']) && $content['priv']>=9)) return '0';
+						else return $content['id'];
+					}
+				}
+			}
+			else {
+
+				if ($where=='admin' && (!isset($_SESSION['fw_user']['priv']) || $_SESSION['fw_user']['priv']>=9)) return '0';
+				else
+				{
+
+					$content = $db->get_single("SELECT * FROM fw_users WHERE login='{$_SESSION['shopuser']['login']}' and password='{$_SESSION['shopuser']['password']}' AND status='1'");
+					if (!empty($content['id']))
+					{
+						return $content['id'];
+
+					}
+					else
+					{
+						$_SESSION['shopuser']="";
+						return '0';
+					}
+
+				}
+			}
+		}
+
+	}
+
+
 	static function check_priv ($priv) {
 	
 		if (isset($_SESSION['fw_user']) && $_SESSION['fw_user']['priv']<=$priv) return true;
